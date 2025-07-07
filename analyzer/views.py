@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import render
 from rest_framework.views import APIView
 from  rest_framework.parsers import MultiPartParser, FormParser
@@ -5,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Resume, AnalysisResume
 from .serializers import ResumeSerializer, AnalysisResumeSerializer
-from .utils import extract_text_from_file
+
 
 
 class ResumeUploadView(APIView):
@@ -29,6 +30,6 @@ class ResumeAnalysisView(APIView):
             # Get analysis for SPECIFIC resume
             analysis_results = AnalysisResume.objects.filter(resume_id=pk)
             serializer = AnalysisResumeSerializer(analysis_results, many=True)
-            return Response(serializer.data)
-        except AnalysisResume.DoesNotExist:
-            return Response({"error": "Resume not found"}, status=404)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Resume.DoesNotExist:
+            return Response({"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND)
