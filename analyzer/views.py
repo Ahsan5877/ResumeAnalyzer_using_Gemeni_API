@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Resume, AnalysisResume
 from .serializers import ResumeSerializer, AnalysisResumeSerializer
+from .utils import extract_text_from_file
 
 
 
