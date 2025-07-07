@@ -5,25 +5,30 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Resume, AnalysisResume
 from .serializers import ResumeSerializer, AnalysisResumeSerializer
-
+from .utils import extract_text_from_file
 
 
 class ResumeUploadView(APIView):
-    parser_classes = (MultiPartParser, FormParser)  
+    parser_classes = (MultiPartParser, FormParser)
+    
     def post(self, request):
         serializer = ResumeSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            instance = serializer.save()
+            
+            # Extract text and save
+            instance.content = extract_text_from_file(instance.file)
+            instance.save()
+            
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
     
-
 class ResumeAnalysisView(APIView):
     def get(self, request, pk):
         try:
-            resume = Resume.objects.get(pk=pk) # Fetch the resume by primary key
-            analysis_results = Resume.objects.all()
+            # Get analysis for SPECIFIC resume
+            analysis_results = AnalysisResume.objects.filter(resume_id=pk)
             serializer = AnalysisResumeSerializer(analysis_results, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except Resume.DoesNotExist:
-            return Response({"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(serializer.data)
+        except AnalysisResume.DoesNotExist:
+            return Response({"error": "Resume not found"}, status=404)
