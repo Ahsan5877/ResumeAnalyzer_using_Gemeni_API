@@ -1,5 +1,4 @@
-from datetime import timezone
-from datetime import datetime
+from markdown import markdown
 import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
@@ -7,10 +6,12 @@ from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Resume, AnalysisResume
+from .models import Resume, AnalysisResume, ChatSession
 from .serializers import ResumeSerializer, AnalysisResumeSerializer
 from .utils.extract import extract_text_from_file
 from .utils.gemeni import analyze_resume, ask_about_resume
+from datetime import datetime
+from django.utils.safestring import mark_safe
 
 class ResumeUploadView(APIView):
     parser_classes = (MultiPartParser, FormParser)
@@ -103,27 +104,41 @@ def upload_view(request):
 
     return render(request, 'analyzer/upload.html')
 
-def chat_view(request, resume_id):
-    resume = Resume.objects.get(id=resume_id)
+def chat_view(request, resume_id, session_id=None):
+    resume = get_object_or_404(Resume, id=resume_id)
     
-    # Initialize chat history in session if it doesn't exist
-    if f'chat_history_{resume_id}' not in request.session:
-        request.session[f'chat_history_{resume_id}'] = []
+    # Handle new chat creation
+    if 'new_chat' in request.GET:
+        new_session = ChatSession.objects.create(resume=resume)
+        return redirect('chat_session', resume_id=resume.id, session_id=new_session.id)
     
+    # Get or create session
+    if session_id:
+        current_session = get_object_or_404(ChatSession, id=session_id, resume=resume)
+    else:
+        current_session = ChatSession.objects.filter(resume=resume).last()
+        if not current_session:
+            current_session = ChatSession.objects.create(resume=resume)
+        return redirect('chat_session', resume_id=resume.id, session_id=current_session.id)
+    
+    # Handle message submission
     if request.method == 'POST':
         question = request.POST.get('question', '').strip()
         if question:
-            # Get answer from your chatbot function
-            answer = ask_about_resume(resume.content, question)
-            
-            # Add to chat history
-            request.session[f'chat_history_{resume_id}'].append({
+            answer = ask_about_resume(resume.content, question,)
+            formatted_answer = mark_safe(markdown(answer))
+            current_session.history.append({
                 'question': question,
-                'answer': answer
+                'answer': formatted_answer,
+                'timestamp': datetime.now().isoformat()
             })
-            request.session.modified = True
+            if not current_session.topic:
+                current_session.topic = f"Chat: {question[:50]}..." if question else "New Chat"
+            current_session.save()
+            return redirect('chat_session', resume_id=resume.id, session_id=current_session.id)
     
     return render(request, 'analyzer/chat.html', {
         'resume': resume,
-        'chat_history': request.session.get(f'chat_history_{resume_id}', [])
+        'current_session': current_session,
+        'chat_sessions': ChatSession.objects.filter(resume=resume).order_by('-created_at'),
     })
