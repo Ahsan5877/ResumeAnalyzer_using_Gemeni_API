@@ -1,15 +1,20 @@
+# Ignore environment variables
 .env
+
+# Ignore Python bytecode and cache folders
 __pycache__/
 *.pyc
-venv
+
+# Ignore virtual environments
+venv/
 .vscode/
 
-# Ignore Django migration files
-analyzer/migrations/
-!analyzer/migrations/__init__.py   # Keep the __init__.py if needed
+# Ignore all Django migration files
+**/migrations/
+!**/migrations/__init__.py  # Keep only __init__.py files
 
 # Ignore media/uploads
 media/
 
-# Local test scripts
+# Ignore local test scripts
 api_testing.py
