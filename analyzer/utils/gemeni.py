@@ -89,17 +89,32 @@ def ask_about_resume(resume_text, question, chat_history=None):
         {question}
 
         {history_section}
-        INSTRUCTIONS:
-        1. If the question cannot be answered from the resume, say "This information is not in the resume"
-        2. For skills/experience questions, provide specific examples from the resume
-        3. Format lists clearly with bullet points when appropriate
-        4. Never invent information not present in the resume
-        5. Keep answers concise (1-3 sentences)
+        STRICT RESPONSE FORMATTING RULES:
+        1. ALWAYS format lists using Markdown-style bullet points with asterisks (*)
+        2. For projects/experience, use this EXACT format:
+        * **Project Name:** Description (Technologies: Tech1, Tech2, Tech3)
+        3. For skills/technologies, use:
+        * **Category:** Item1, Item2, Item3
+        4. Put each item on its own line
+        5. Never use HTML tags in responses
+        6. Separate sections with blank lines
+
+        EXAMPLE FORMAT:
+        Ahsan Iqbal's projects include:
+
+        * **Project 1:** Description (Technologies: A, B)
+        * **Project 2:** Description (Technologies: C, D)
+
+        MANDATORY INSTRUCTIONS:
+        1. If information isn't in resume: "This information is not in the resume"
+        2. For skills questions: Provide specific examples in bullet lists
+        3. Never invent information
+        4. Keep answers concise but properly formatted
+        5. Use **bold** for categories/subcategories
         """
 
-        # 5. API Configuration
         generation_config = {
-            "temperature": 0.3,
+            "temperature": 0.3,  # Keep low for factual responses
             "top_p": 0.7,
             "top_k": 40,
             "max_output_tokens": 512,

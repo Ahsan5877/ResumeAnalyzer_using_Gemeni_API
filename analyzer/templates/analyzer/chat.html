@@ -10,46 +10,131 @@
             --secondary: #f8f9fa;
             --text: #333;
             --light-text: #777;
+            --active-chat: #e3f2fd;
         }
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
+            display: flex;
+            height: 100vh;
             background-color: #f5f7fa;
         }
         
-        .container {
-            max-width: 800px;
-            margin: 20px auto;
+        .sidebar {
+            width: 280px;
             background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-right: 1px solid #eee;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-header {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .sidebar-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .new-chat-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+        }
+        
+        .chat-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+        
+        .chat-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .chat-item:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .chat-item.active {
+            background-color: var(--active-chat);
+            border-left: 3px solid var(--primary);
+        }
+        
+        .chat-item-content {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-item-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+            white-space: nowrap;
             overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .chat-item-preview {
+            font-size: 13px;
+            color: var(--light-text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .chat-item-time {
+            font-size: 11px;
+            color: var(--light-text);
+            margin-top: 3px;
+        }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
         
         .chat-header {
             background: var(--primary);
             color: white;
-            padding: 20px;
+            padding: 15px 20px;
             text-align: center;
         }
         
         .chat-area {
+            flex: 1;
             padding: 20px;
-            height: 500px;
             overflow-y: auto;
+            background: white;
             display: flex;
             flex-direction: column;
         }
         
         .message {
             margin-bottom: 15px;
-            padding: 12px 16px;
+            padding: 10px 15px;
             border-radius: 18px;
-            max-width: 75%;
-            position: relative;
+            max-width: 80%;
+            width: fit-content;
             animation: fadeIn 0.3s ease;
+            word-break: break-word;
         }
         
         @keyframes fadeIn {
@@ -61,6 +146,9 @@
             background: #e3f2fd;
             align-self: flex-start;
             border-radius: 0 18px 18px 18px;
+            max-width: 80%;
+            min-width: 0;
+            padding: 10px 15px;
         }
         
         .user-message {
@@ -68,6 +156,9 @@
             color: white;
             align-self: flex-end;
             border-radius: 18px 0 18px 18px;
+            max-width: 75%;
+            min-width: 0;
+            padding: 10px 15px;
         }
         
         .message-time {
@@ -101,12 +192,6 @@
             padding: 10px 20px;
             border-radius: 20px;
             cursor: pointer;
-            font-size: 15px;
-            transition: background 0.2s;
-        }
-        
-        button[type="submit"]:hover {
-            background: #2980b9;
         }
         
         .resume-info {
@@ -114,30 +199,96 @@
             padding: 15px;
             margin-bottom: 20px;
             border-radius: 5px;
-            font-size: 14px;
         }
         
-        .typing-indicator {
-            display: none;
-            padding: 10px 15px;
-            background: #e3f2fd;
-            border-radius: 18px;
-            align-self: flex-start;
-            margin-bottom: 15px;
-            animation: pulse 1.5s infinite;
+        .no-chats {
+            padding: 20px;
+            text-align: center;
+            color: var(--light-text);
         }
         
-        @keyframes pulse {
-            0% { opacity: 0.5; }
-            50% { opacity: 1; }
-            100% { opacity: 0.5; }
+        /* Bullet point styling */
+        .bot-message ul {
+            margin: 10px 0 10px 20px;
+            padding-left: 0;
+            list-style-type: none;
+        }
+        
+        .bot-message ul li {
+            position: relative;
+            padding-left: 25px;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        
+        .bot-message ul li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-size: 1.2em;
+        }
+        
+        .bot-message strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .bot-message em {
+            color: #7f8c8d;
+            font-style: normal;
+            font-size: 0.9em;
+        }
+
+        /* Special handling for very short messages */
+        .short-message {
+            padding: 8px 12px;
+            min-width: auto;
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">
+                <h3>Chat Sessions</h3>
+                <a href="{% url 'chat_create' resume_id=resume.id %}?new_chat=true" class="new-chat-btn">+ New</a>
+            </div>
+        </div>
+        
+        <ul class="chat-list">
+            {% for session in chat_sessions %}
+                <li class="chat-item {% if session.id == current_session.id %}active{% endif %}">
+                    <a href="{% url 'chat_session' resume_id=resume.id session_id=session.id %}" style="text-decoration: none; color: inherit;">
+                        <div class="chat-item-content">
+                            <div class="chat-item-title">
+                                {{ session.topic|default:"New Chat" }}
+                            </div>
+                            {% if session.history %}
+                                <div class="chat-item-preview">
+                                    {{ session.history.0.question|truncatechars:40 }}
+                                </div>
+                            {% endif %}
+                            <div class="chat-item-time">
+                                {{ session.created_at|date:"M d, H:i" }}
+                            </div>
+                        </div>
+                    </a>
+                </li>
+            {% empty %}
+                <div class="no-chats">No previous chats</div>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Main Chat Area -->
+    <div class="main-content">
         <div class="chat-header">
             <h1>Chat About {{ resume.name|default:"This Resume" }}</h1>
+            {% if current_session.topic and current_session.topic != "New Chat" %}
+                <p>Topic: {{ current_session.topic }}</p>
+            {% endif %}
         </div>
         
         <div class="chat-area" id="chatArea">
@@ -148,39 +299,43 @@
             </div>
             
             <!-- Initial bot message -->
-            <div class="message bot-message">
+            <div class="message bot-message {% if 'Hello! I can answer questions about this resume'|length < 50 %}short-message{% endif %}">
                 Hello! I can answer questions about this resume. Ask me anything.
-                <div class="message-time">Just now</div>
+                <div class="message-time">System</div>
             </div>
             
             <!-- Chat history -->
-            {% for chat in chat_history %}
-                <div class="message user-message">
+            {% for chat in current_session.history %}
+                <div class="message user-message {% if chat.question|length < 30 %}short-message{% endif %}">
                     {{ chat.question }}
                     <div class="message-time">You - {{ chat.timestamp|date:"H:i" }}</div>
                 </div>
-                <div class="message bot-message">
+                <div class="message bot-message {% if chat.answer|length < 50 %}short-message{% endif %}">
+                    {% autoescape off %}
                     {{ chat.answer }}
+                    {% endautoescape %}
                     <div class="message-time">Assistant - {{ chat.timestamp|date:"H:i" }}</div>
                 </div>
             {% endfor %}
             
-            <!-- Current Q&A (for immediate display after submit) -->
+            <!-- Current Q&A (only if exists) -->
             {% if question and answer %}
-                <div class="message user-message">
+                <div class="message user-message {% if question|length < 30 %}short-message{% endif %}">
                     {{ question }}
                     <div class="message-time">You - Now</div>
                 </div>
-                <div class="message bot-message">
+                <div class="message bot-message {% if answer|length < 50 %}short-message{% endif %}">
+                    {% autoescape off %}
                     {{ answer }}
+                    {% endautoescape %}
                     <div class="message-time">Assistant - Now</div>
                 </div>
             {% endif %}
         </div>
         
-        <form method="post" class="input-area" id="chatForm">
+        <form method="post" class="input-area" action="{% url 'chat_session' resume_id=resume.id session_id=current_session.id %}">
             {% csrf_token %}
-            <input type="text" id="user-input" name="question" placeholder="Ask about this resume..." required autocomplete="off">
+            <input type="text" id="user-input" name="question" placeholder="Ask about this resume..." required>
             <button type="submit">Send</button>
         </form>
     </div>
