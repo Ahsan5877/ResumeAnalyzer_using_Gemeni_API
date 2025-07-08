@@ -4,16 +4,14 @@ from .models import Resume, AnalysisResume
 class ResumeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Resume
-        fields = ['id', 'file']  # Only expose necessary fields
-        read_only_fields = ['id']
+        fields = ['id', 'name', 'email', 'file', 'uploaded_at']
+        read_only_fields = ['id', 'uploaded_at']
     
     def validate_file(self, value):
-        # Add file validation
-        ext = value.name.split('.')[-1].lower()
-        if ext not in ['pdf', 'docx']:
-            raise serializers.ValidationError("Unsupported file format")
+        if not value.name.lower().endswith(('.pdf', '.docx')):
+            raise serializers.ValidationError("Only PDF and DOCX files are allowed")
         if value.size > 5 * 1024 * 1024:  # 5MB limit
-            raise serializers.ValidationError("File too large")
+            raise serializers.ValidationError("File too large (max 5MB)")
         return value
 
 class AnalysisResumeSerializer(serializers.ModelSerializer):

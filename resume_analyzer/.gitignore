@@ -3,3 +3,13 @@ __pycache__/
 *.pyc
 venv
 .vscode/
+
+# Ignore Django migration files
+analyzer/migrations/
+!analyzer/migrations/__init__.py   # Keep the __init__.py if needed
+
+# Ignore media/uploads
+media/
+
+# Local test scripts
+api_testing.py
