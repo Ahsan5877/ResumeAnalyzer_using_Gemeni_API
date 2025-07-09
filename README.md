@@ -45,6 +45,7 @@ A Django-based web application that analyzes resumes and provides interactive ch
         python manage.py runserver
 
 API Endpoints:
+
 http://127.0.0.1:8000/api/ (Upload Your Resume)
 
 http://127.0.0.1:8000/api/chat/<Resume_id> (Start Converstaion with Chatbot)
