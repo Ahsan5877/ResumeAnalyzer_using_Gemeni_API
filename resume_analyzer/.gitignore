@@ -1,20 +1,10 @@
-# Ignore environment variables
+__init__.py
+__pycache__
 .env
-
-# Ignore Python bytecode and cache folders
 __pycache__/
 *.pyc
-
-# Ignore virtual environments
 venv/
 .vscode/
-
-# Ignore all Django migration files
 **/migrations/
 !**/migrations/__init__.py  # Keep only __init__.py files
-
-# Ignore media/uploads
 media/
-
-# Ignore local test scripts
-api_testing.py
