@@ -22,6 +22,7 @@ A Django-based web application that analyzes resumes and provides interactive ch
 1. Clone the repository:
 
    https://github.com/Ahsan5877/ResumeAnalyzer_using_Gemeni_API.git
+
    cd resume-analyzer
 
 2. Create and activate a virtual environment
