@@ -1,0 +1,101 @@
+<!-- templates/analyzer/jd_sidebar.html -->
+<div class="right-sidebar">
+    <div class="jd-upload-box">
+        <h3>Job Description Analyzer</h3>
+        <form method="post" action="{% url 'analyze_ats' resume_id=resume.id %}">
+            {% csrf_token %}
+            <textarea name="jd_text" class="jd-textarea" placeholder="Paste job description here..." required>{% if request.POST.jd_text %}{{ request.POST.jd_text }}{% endif %}</textarea>
+            <button type="submit" class="upload-btn">Analyze ATS Score</button>
+        </form>
+    </div>
+    
+    {% if ats_results %}
+    <div class="ats-results">
+        <h3>ATS Analysis</h3>
+        <div class="ats-score">{{ ats_results.score }}%</div>
+        <div class="improvement-list">
+            {% for item in ats_results.improvements %}
+            <div class="improvement-item">{{ item }}</div>
+            {% endfor %}
+        </div>
+        
+        <!-- Add to Chat Button -->
+        <form method="post" action="{% url 'add_ats_to_chat' resume_id=resume.id %}" style="margin-top: 15px;">
+            {% csrf_token %}
+            <input type="hidden" name="score" value="{{ ats_results.score }}">
+            <input type="hidden" name="improvements" value="{{ ats_results.improvements|join:'|||' }}">
+            <button type="submit" class="upload-btn" style="background-color: #4CAF50;">Add to Chat History</button>
+        </form>
+    </div>
+    {% endif %}
+    
+    {% if messages %}
+    <div class="sidebar-messages">
+        {% for message in messages %}
+        <div class="message-{{ message.tags }}" style="color: {% if message.tags == 'error' %}red{% else %}green{% endif %}; padding: 10px; margin-top: 10px;">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .jd-textarea {
+        width: 100%;
+        height: 200px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        resize: vertical;
+        font-family: inherit;
+    }
+    
+    .upload-btn {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 100%;
+        font-size: 14px;
+        transition: background 0.3s;
+    }
+    
+    .upload-btn:hover {
+        background: #2980b9;
+    }
+    
+    .ats-results {
+        background: #e8f5e9;
+        padding: 15px;
+        border-radius: 5px;
+        margin-top: 20px;
+    }
+    
+    .ats-score {
+        font-size: 24px;
+        font-weight: bold;
+        color: #2e7d32;
+        text-align: center;
+        margin: 10px 0;
+    }
+    
+    .improvement-item {
+        margin-bottom: 8px;
+        padding-left: 20px;
+        position: relative;
+        line-height: 1.4;
+    }
+    
+    .improvement-item::before {
+        content: "•";
+        position: absolute;
+        left: 0;
+        color: #2e7d32;
+        font-weight: bold;
+        font-size: 18px;
+    }
+</style>

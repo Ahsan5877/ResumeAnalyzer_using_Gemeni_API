@@ -1,15 +1,3 @@
-# import os
-# import django
-# import sys
-
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-# # ✅ Step 2: Set settings module
-# os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'resume_analyzer.settings')
-
-# # ✅ Step 3: Setup Django
-# django.setup()
-# analyzer/utils/gemini.py
 import google.generativeai as genai
 from django.conf import settings
 import json
@@ -18,7 +6,7 @@ genai.configure(api_key=settings.GEMINI_API_KEY)
 
 def analyze_resume(text):
     """Analyze resume text using Gemini and return JSON string"""
-    model = genai.GenerativeModel('gemini-pro')
+    model = genai.GenerativeModel('gemini-2.5-flash')
     
     prompt = """
     Analyze this resume and return STRICT JSON format with:
