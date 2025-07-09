@@ -1,4 +1,6 @@
 from django.db import models
+from django.forms import JSONField
+from .utils.validators import validate_jd_length
 
 # Create your models here.
 class Resume(models.Model):
@@ -39,3 +41,38 @@ class ChatSession(models.Model):
             first_question = self.history[0].get('question', '')[:50]
             self.topic = f"Chat: {first_question}..." if first_question else "New Chat"
         super().save(*args, **kwargs)
+    class Meta:
+        db_table = 'analyzer_chatsession'
+        managed = False
+class JobDescription(models.Model):
+    resume = models.ForeignKey(
+        'Resume',
+        on_delete=models.CASCADE,
+        related_name='job_descriptions'
+    )
+    text = models.TextField(
+        validators=[validate_jd_length],
+        help_text="Paste the full job description here"
+    )
+    # ✅ Native JSONField that works with MySQL 5.7+ and Django 3.1+
+    analysis_results = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Stores ATS score and improvement suggestions"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        db_table = 'analyzer_job_description'
+        # Remove managed=False so Django can manage the table normally
+
+    def __str__(self):
+        return f"JD for {self.resume.name} ({self.created_at.date()})"
+
+    def get_score(self):
+        return self.analysis_results.get('score', 0)
+
+    def get_improvements(self):
+        return self.analysis_results.get('improvements', [])

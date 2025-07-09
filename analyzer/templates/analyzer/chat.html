@@ -11,19 +11,23 @@
             --text: #333;
             --light-text: #777;
             --active-chat: #e3f2fd;
+            --success: #2ecc71;
+            --warning: #e67e22;
+            --danger: #e74c3c;
         }
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            display: flex;
+            display: grid;
+            grid-template-columns: 280px 1fr 300px;
             height: 100vh;
             background-color: #f5f7fa;
         }
         
+        /* Left Sidebar Styles */
         .sidebar {
-            width: 280px;
             background: white;
             border-right: 1px solid #eee;
             overflow-y: auto;
@@ -105,10 +109,11 @@
             margin-top: 3px;
         }
         
+        /* Main Content Styles */
         .main-content {
-            flex: 1;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
         
         .chat-header {
@@ -127,12 +132,15 @@
             flex-direction: column;
         }
         
+        /* Dynamic Message Bubbles */
         .message {
-            margin-bottom: 15px;
-            padding: 10px 15px;
-            border-radius: 18px;
-            max-width: 80%;
+            max-width: 85%;
             width: fit-content;
+            min-width: 60px;
+            padding: 10px 15px;
+            margin-bottom: 12px;
+            border-radius: 18px;
+            position: relative;
             animation: fadeIn 0.3s ease;
             word-break: break-word;
         }
@@ -146,9 +154,6 @@
             background: #e3f2fd;
             align-self: flex-start;
             border-radius: 0 18px 18px 18px;
-            max-width: 80%;
-            min-width: 0;
-            padding: 10px 15px;
         }
         
         .user-message {
@@ -156,9 +161,17 @@
             color: white;
             align-self: flex-end;
             border-radius: 18px 0 18px 18px;
-            max-width: 75%;
-            min-width: 0;
-            padding: 10px 15px;
+        }
+        
+        /* Compact messages for short content */
+        .message.compact {
+            padding: 8px 12px;
+            min-width: auto;
+        }
+        
+        /* Special styling for ATS analysis */
+        .bot-message.ats-analysis {
+            max-width: 90%;
         }
         
         .message-time {
@@ -207,48 +220,134 @@
             color: var(--light-text);
         }
         
-        /* Bullet point styling */
-        .bot-message ul {
-            margin: 10px 0 10px 20px;
-            padding-left: 0;
-            list-style-type: none;
+        /* Right Sidebar Styles */
+        .right-sidebar {
+            background: white;
+            border-left: 1px solid #eee;
+            overflow-y: auto;
+            padding: 15px;
         }
         
-        .bot-message ul li {
-            position: relative;
-            padding-left: 25px;
-            margin-bottom: 8px;
-            line-height: 1.5;
+        .jd-upload-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
         }
         
-        .bot-message ul li:before {
-            content: "•";
-            position: absolute;
-            left: 0;
-            color: var(--primary);
-            font-size: 1.2em;
+        .jd-textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            resize: vertical;
+            font-family: inherit;
         }
         
-        .bot-message strong {
-            color: #2c3e50;
-            font-weight: 600;
+        .upload-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
         }
         
-        .bot-message em {
-            color: #7f8c8d;
-            font-style: normal;
+        .upload-btn:hover {
+            background: #2980b9;
+        }
+        
+        .ats-results {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        
+        .ats-score {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--success);
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        /* Improved table styling */
+        .bot-message table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
             font-size: 0.9em;
         }
-
-        /* Special handling for very short messages */
-        .short-message {
-            padding: 8px 12px;
-            min-width: auto;
+        
+        .bot-message th {
+            background-color: #f2f2f2;
+            text-align: left;
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+        
+        .bot-message td {
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+        
+        .bot-message tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        /* Bullet point styling */
+        .bot-message ul {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        
+        .bot-message li {
+            margin-bottom: 5px;
+            position: relative;
+        }
+        
+        .bot-message li::before {
+            content: "•";
+            position: absolute;
+            left: -15px;
+            color: var(--primary);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            body {
+                grid-template-columns: 250px 1fr 280px;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            body {
+                grid-template-columns: 220px 1fr;
+            }
+            .right-sidebar {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                display: none;
+            }
+            .message {
+                max-width: 90%;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Sidebar -->
+    <!-- Left Sidebar -->
     <div class="sidebar">
         <div class="sidebar-header">
             <div class="sidebar-title">
@@ -299,18 +398,18 @@
             </div>
             
             <!-- Initial bot message -->
-            <div class="message bot-message {% if 'Hello! I can answer questions about this resume'|length < 50 %}short-message{% endif %}">
+            <div class="message bot-message {% if 'Hello! I can answer questions about this resume'|length < 50 %}compact{% endif %}">
                 Hello! I can answer questions about this resume. Ask me anything.
                 <div class="message-time">System</div>
             </div>
             
             <!-- Chat history -->
             {% for chat in current_session.history %}
-                <div class="message user-message {% if chat.question|length < 30 %}short-message{% endif %}">
+                <div class="message user-message {% if chat.question|length < 30 %}compact{% endif %}">
                     {{ chat.question }}
                     <div class="message-time">You - {{ chat.timestamp|date:"H:i" }}</div>
                 </div>
-                <div class="message bot-message {% if chat.answer|length < 50 %}short-message{% endif %}">
+                <div class="message bot-message {% if chat.answer|length < 50 %}compact{% endif %} {% if 'ATS Analysis' in chat.answer %}ats-analysis{% endif %}">
                     {% autoescape off %}
                     {{ chat.answer }}
                     {% endautoescape %}
@@ -320,11 +419,11 @@
             
             <!-- Current Q&A (only if exists) -->
             {% if question and answer %}
-                <div class="message user-message {% if question|length < 30 %}short-message{% endif %}">
+                <div class="message user-message {% if question|length < 30 %}compact{% endif %}">
                     {{ question }}
                     <div class="message-time">You - Now</div>
                 </div>
-                <div class="message bot-message {% if answer|length < 50 %}short-message{% endif %}">
+                <div class="message bot-message {% if answer|length < 50 %}compact{% endif %} {% if 'ATS Analysis' in answer %}ats-analysis{% endif %}">
                     {% autoescape off %}
                     {{ answer }}
                     {% endautoescape %}
@@ -340,6 +439,30 @@
         </form>
     </div>
 
+    <!-- Right Sidebar -->
+    <div class="right-sidebar">
+        <div class="jd-upload-box">
+            <h3>Job Description Analyzer</h3>
+            <form method="post" action="{% url 'analyze_ats' resume_id=resume.id %}">
+                {% csrf_token %}
+                <textarea name="jd_text" class="jd-textarea" placeholder="Paste job description here..." required>{% if request.POST.jd_text %}{{ request.POST.jd_text }}{% endif %}</textarea>
+                <button type="submit" class="upload-btn">Analyze ATS Score</button>
+            </form>
+        </div>
+        
+        {% if ats_results %}
+        <div class="ats-results">
+            <h3>ATS Analysis</h3>
+            <div class="ats-score">{{ ats_results.score }}%</div>
+            <div class="improvement-list">
+                {% for item in ats_results.improvements %}
+                <div class="improvement-item">{{ item }}</div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
     <script>
         // Auto-scroll to bottom of chat
         const chatArea = document.getElementById('chatArea');
@@ -347,6 +470,14 @@
         
         // Focus input field on load
         document.getElementById('user-input').focus();
+        
+        // Smooth scrolling for new messages
+        function scrollToBottom() {
+            chatArea.scrollTo({
+                top: chatArea.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
     </script>
 </body>
 </html>
