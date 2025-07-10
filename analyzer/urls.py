@@ -1,4 +1,4 @@
-from .views import ResumeUploadView, upload_view, chat_view, analyze_ats, add_ats_to_chat
+from .views import ResumeUploadView, upload_view, chat_view, analyze_ats, add_ats_to_chat, get_improvements 
 from django.urls import path
 
 urlpatterns = [
@@ -8,4 +8,5 @@ urlpatterns = [
     path('upload/', ResumeUploadView.as_view(), name='resume-upload'),
     path('resume/<int:resume_id>/analyze-ats/', analyze_ats, name='analyze_ats'),
     path('resume/<int:resume_id>/add-ats-to-chat/', add_ats_to_chat, name='add_ats_to_chat'),
+    path('resume/<int:resume_id>/improvements/', get_improvements, name='get_improvements'),
 ]

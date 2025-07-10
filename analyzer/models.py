@@ -19,6 +19,8 @@ class Resume(models.Model):
 class AnalysisResume(models.Model):
     resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name='analysis_results') # This creates a foreign key relationship with the Resume model
     analysis_result = models.TextField()
+    overview = models.TextField() # This field can be used to store a summary or overview of the analysis
+    improvements = models.JSONField(default=list) # This field can store a list of suggested improvements in JSON format
     analyzed_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -66,7 +68,7 @@ class JobDescription(models.Model):
     class Meta:
         ordering = ['-created_at']
         db_table = 'analyzer_job_description'
-        # Remove managed=False so Django can manage the table normally
+        managed = False
 
     def __str__(self):
         return f"JD for {self.resume.name} ({self.created_at.date()})"
