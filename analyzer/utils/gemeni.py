@@ -5,39 +5,82 @@ import json
 genai.configure(api_key=settings.GEMINI_API_KEY)
 
 def analyze_resume(text):
-    """Analyze resume text using Gemini and return JSON string"""
+    """Analyze resume text using Gemini and return parsed data with improvements"""
     model = genai.GenerativeModel('gemini-2.5-flash')
     
     prompt = """
     Analyze this resume and return STRICT JSON format with:
+    - overview (string): Brief professional summary (2-3 sentences max)
+    - improvements (list): 3-5 specific suggestions (max 10 words each, start with action verbs)
     - name (string)
-    - email (string)
+    - email (string) 
     - skills (list)
     - experience (float)
-    - summary (string)
     - education (list)
-    - projects (list)
-    
+
+    STRICT REQUIREMENTS:
+    1. Each improvement must be:
+    - Maximum 10 words
+    - Start with action verb (Add, Remove, Highlight, etc.)
+    - Focus on measurable outcomes
+    2. Overview must be 2-3 sentences max
+    3. Skills should be ordered by relevance
+
     Example Output:
     {
+        "overview": "Full-stack developer with 5 years experience building web applications. Strong in Python and React.",
+        "improvements": [
+            "Quantify achievements with metrics",
+            "Highlight top 3 projects",
+            "Add missing skill: Docker"
+        ],
         "name": "John Doe",
         "email": "john@example.com",
-        "skills": ["Python", "Django"],
-        "experience": 3.5,
-        "summary": "Experienced developer...",
-        "education": ["MS in Computer Science"],
-        "projects": ["Built resume analyzer"]
+        "skills": ["Python", "React", "Django", "JavaScript"],
+        "experience": 5.2,
+        "education": ["MS Computer Science - Stanford University"]
     }
-    
+
     Resume Text:
-    """ + text[:15000]  # Gemini token limit
+    """ + text[:15000]
     
     try:
         response = model.generate_content(prompt)
-        return response.text  # Return as JSON string
+        response_text = response.text.strip()
+        
+        # Clean JSON response
+        if response_text.startswith('```json'):
+            response_text = response_text[7:-3].strip()
+        
+        # Parse and validate response
+        data = json.loads(response_text)
+        
+        # Ensure required fields exist
+        if 'improvements' not in data:
+            data['improvements'] = ["No specific suggestions generated"]
+            
+        if 'overview' not in data:
+            data['overview'] = "Professional summary not available"
+            
+        return data
+        
+    except json.JSONDecodeError:
+        print("Failed to parse Gemini response")
+        return {
+            "overview": "Analysis failed",
+            "improvements": ["Could not parse response - please try again"],
+            "skills": [],
+            "experience": 0
+        }
     except Exception as e:
         print(f"Gemini Error: {e}")
-        return json.dumps({"error": str(e)})
+        return {
+            "overview": "Analysis service unavailable",
+            "improvements": ["Temporary service interruption"],
+            "skills": [],
+            "experience": 0
+        }
+
 def format_chat_history(chat_history):
     return "CHAT HISTORY:\n" + "\n".join(chat_history) if chat_history else ""
 

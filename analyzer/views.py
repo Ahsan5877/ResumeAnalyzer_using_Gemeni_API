@@ -113,6 +113,49 @@ def upload_view(request):
 
     return render(request, 'analyzer/upload.html')
 
+def get_improvements(request, resume_id):
+    resume = get_object_or_404(Resume, id=resume_id)
+    
+    try:
+        # Get current or create new chat session
+        current_session = ChatSession.objects.filter(resume=resume).last()
+        if not current_session:
+            current_session = ChatSession.objects.create(resume=resume)
+        
+        # Call AI function to analyze resume
+        analysis = analyze_resume(resume.content)
+
+        # Handle case where analysis is a string (e.g., JSON string)
+        if isinstance(analysis, str):
+            try:
+                analysis = json.loads(analysis)
+            except json.JSONDecodeError:
+                analysis = {}
+
+        improvements = analysis.get('improvements', [])
+
+        # Store in session if needed for frontend display
+        request.session['resume_improvements'] = improvements
+
+        # Add improvements to chat history
+        if improvements:
+            chat_message = "**Resume Improvement Suggestions:**\n\n" + "\n".join(f"- {imp}" for imp in improvements)
+            
+            current_session.history.append({
+                'question': "Get Resume Improvements",
+                'answer': mark_safe(markdown(chat_message)),  # renders markdown formatting
+                'timestamp': datetime.now().isoformat()
+            })
+            current_session.save()
+        
+        # Redirect to chat page
+        return redirect('chat_session', resume_id=resume.id, session_id=current_session.id)
+
+    except Exception as e:
+        logger.error(f"Resume Improvement Error: {str(e)}")
+        messages.error(request, "Failed to generate improvements. Please try again.")
+        return redirect('chat_session', resume_id=resume.id, session_id=current_session.id)
+
 def chat_view(request, resume_id, session_id=None):
     # Get resume object or return 404
     resume = get_object_or_404(Resume, id=resume_id)
@@ -131,10 +174,42 @@ def chat_view(request, resume_id, session_id=None):
             current_session = ChatSession.objects.create(resume=resume)
         return redirect('chat_session', resume_id=resume.id, session_id=current_session.id)
     
-    # Handle POST requests (both chat messages and JD analysis)
+    # Initialize improvements in context
+    improvements = None
+    
+    # Handle POST requests (chat messages, JD analysis, and improvements request)
     if request.method == 'POST':
+        # Resume Improvements Request
+        if request.path.endswith('/improvements/'):
+            try:
+                # Get AI-generated improvements
+                analysis = analyze_resume(resume.content)
+                improvements = analysis.get('improvements', [])
+                
+                # Store in session for display
+                request.session['resume_improvements'] = improvements
+                
+                # Add to chat history
+                if improvements:
+                    chat_message = "**Resume Improvement Suggestions:**\n- " + "\n- ".join(improvements)
+                    
+                    current_session.history.append({
+                        'question': "Get Resume Improvements",
+                        'answer': mark_safe(markdown(chat_message)),
+                        'timestamp': datetime.now().isoformat()
+                    })
+                    current_session.save()
+                
+                messages.success(request, "Improvement suggestions generated")
+                
+            except Exception as e:
+                logger.error(f"Resume Improvement Error: {str(e)}")
+                messages.error(request, "Failed to generate improvements. Please try again.")
+            
+            return redirect('chat', resume_id=resume.id, session_id=current_session.id)
+        
         # JD Analysis Request
-        if 'jd_text' in request.POST:
+        elif 'jd_text' in request.POST:
             jd_text = request.POST.get('jd_text', '').strip()
             if not jd_text:
                 messages.error(request, "Please enter a job description")
@@ -186,28 +261,32 @@ def chat_view(request, resume_id, session_id=None):
             return redirect('chat_session', resume_id=resume.id, session_id=current_session.id)
         
         # Normal Chat Message
-        question = request.POST.get('question', '').strip()
-        if question:
-            try:
-                answer = ask_about_resume(resume.content, question)
-                formatted_answer = mark_safe(markdown(answer))
+        else:
+            question = request.POST.get('question', '').strip()
+            if question:
+                try:
+                    answer = ask_about_resume(resume.content, question)
+                    formatted_answer = mark_safe(markdown(answer))
+                    
+                    current_session.history.append({
+                        'question': question,
+                        'answer': formatted_answer,
+                        'timestamp': datetime.now().isoformat()
+                    })
+                    
+                    if not current_session.topic:
+                        current_session.topic = f"Chat: {question[:50]}..." if question else "New Chat"
+                    
+                    current_session.save()
+                    
+                except Exception as e:
+                    logger.error(f"Chat Error: {str(e)}")
+                    messages.error(request, "Failed to process your question. Please try again.")
                 
-                current_session.history.append({
-                    'question': question,
-                    'answer': formatted_answer,
-                    'timestamp': datetime.now().isoformat()
-                })
-                
-                if not current_session.topic:
-                    current_session.topic = f"Chat: {question[:50]}..." if question else "New Chat"
-                
-                current_session.save()
-                
-            except Exception as e:
-                logger.error(f"Chat Error: {str(e)}")
-                messages.error(request, "Failed to process your question. Please try again.")
-            
-            return redirect('chat_session', resume_id=resume.id, session_id=current_session.id)
+                return redirect('chat_session', resume_id=resume.id, session_id=current_session.id)
+    
+    # Get improvements from session if available
+    improvements = request.session.pop('resume_improvements', None)
     
     # Prepare context for template
     context = {
@@ -215,7 +294,8 @@ def chat_view(request, resume_id, session_id=None):
         'current_session': current_session,
         'chat_sessions': ChatSession.objects.filter(resume=resume).order_by('-created_at'),
         'ats_results': request.session.pop('ats_results', None),
-        'recent_jds': JobDescription.objects.filter(resume=resume).order_by('-created_at')[:5]
+        'recent_jds': JobDescription.objects.filter(resume=resume).order_by('-created_at')[:5],
+        'improvements': improvements  # Add improvements to context
     }
     
     return render(request, 'analyzer/chat.html', context)

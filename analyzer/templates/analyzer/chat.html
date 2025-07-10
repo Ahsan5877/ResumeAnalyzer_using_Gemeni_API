@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resume Chat - {{ resume.name|default:"Unknown" }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         :root {
             --primary: #3498db;
@@ -14,6 +15,7 @@
             --success: #2ecc71;
             --warning: #e67e22;
             --danger: #e74c3c;
+            --improvement-purple: #9c27b0;
         }
         
         body {
@@ -212,6 +214,77 @@
             padding: 15px;
             margin-bottom: 20px;
             border-radius: 5px;
+            position: relative;
+        }
+        
+        /* New Improvement Button Styles */
+        .improve-btn {
+            background: linear-gradient(135deg, var(--improvement-purple), #6a1b9a);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 15px;
+            margin-top: 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .improve-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            background: linear-gradient(135deg, #8e24aa, #6a1b9a);
+        }
+        
+        .improve-btn:active {
+            transform: translateY(0);
+        }
+        
+        /* Improvements Container */
+        .improvements-container {
+            background: #f3e5f5;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 4px solid var(--improvement-purple);
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        .improvements-title {
+            color: var(--improvement-purple);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .improvements-list {
+            list-style-type: none;
+            padding-left: 0;
+            margin: 0;
+        }
+        
+        .improvements-list li {
+            background: white;
+            padding: 10px 15px 10px 35px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            position: relative;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .improvements-list li:before {
+            content: "\f058";
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            color: var(--improvement-purple);
+            position: absolute;
+            left: 15px;
+            top: 10px;
         }
         
         .no-chats {
@@ -395,8 +468,16 @@
                 <h3>Resume Summary</h3>
                 <p><strong>Name:</strong> {{ resume.name|default:"Not provided" }}</p>
                 <p><strong>Email:</strong> {{ resume.email|default:"Not provided" }}</p>
+                
+                <!-- New Improvement Button (HTML+CSS only solution) -->
+                <form method="post" action="{% url 'get_improvements' resume_id=resume.id %}" style="margin-top: 15px;">
+                    {% csrf_token %}
+                    <button type="submit" class="improve-btn">
+                        <i class="fas fa-magic"></i> Get Resume Improvements
+                    </button>
+                </form>
             </div>
-            
+
             <!-- Initial bot message -->
             <div class="message bot-message {% if 'Hello! I can answer questions about this resume'|length < 50 %}compact{% endif %}">
                 Hello! I can answer questions about this resume. Ask me anything.
@@ -462,22 +543,5 @@
         </div>
         {% endif %}
     </div>
-
-    <script>
-        // Auto-scroll to bottom of chat
-        const chatArea = document.getElementById('chatArea');
-        chatArea.scrollTop = chatArea.scrollHeight;
-        
-        // Focus input field on load
-        document.getElementById('user-input').focus();
-        
-        // Smooth scrolling for new messages
-        function scrollToBottom() {
-            chatArea.scrollTo({
-                top: chatArea.scrollHeight,
-                behavior: 'smooth'
-            });
-        }
-    </script>
 </body>
 </html>
